@@ -2,36 +2,48 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"net/http"
 	"log"
 	"io/ioutil"
 	"encoding/json"
 
+	"github.com/tkanos/gonfig"
+
 	"models"
+	"environments"
 )
+
+var configuration environments.Configuration
+
+func init() {
+	err := gonfig.GetConf("./environments/production.json", &configuration)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
 
 func main() {
 	fmt.Println(getLatestedUSDRate())
 }
 
 func getLatestedUSDRate() models.ExchangeratesapiResponse {
-	access_key := os.Getenv("EXCHANGERATESAPI_ACCESS_KEY")
-	base_api_url := "http://api.exchangeratesapi.io/v1/"
-	endpoint_name := "latest"
-	url_params := "?" + "access_key=" + access_key + "&base=EUR&symbols=USD"
-	full_url := base_api_url + endpoint_name + url_params
+	endpoint := "latest"
+	urlParams := "base=EUR&symbols=USD"
+	url := buildUrlFor(endpoint, urlParams)
 
-	response, err := http.Get(full_url)
-	if err != nil {
-		log.Fatal(err)
-	}
+	fmt.Println("Calling:", url)
 
+	response, err := http.Get(url)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	responseData, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("Response:", string(responseData))
 
 	// Unmarshal standard keys
 	var exchangeratesapiResponseObject models.ExchangeratesapiResponse
@@ -50,4 +62,18 @@ func getLatestedUSDRate() models.ExchangeratesapiResponse {
 	}
 
 	return exchangeratesapiResponseObject
+}
+
+func buildUrlFor(endpoint string, urlParams string) string {
+	baseApiUrl := configuration.ExchangeratesapiRoot
+	accessKey := configuration.AccessKey
+	integratedUrlParams := "?" + "access_key=" + accessKey
+
+	if urlParams != "" {
+		integratedUrlParams += "&" + urlParams
+	}
+
+	url := baseApiUrl + endpoint + integratedUrlParams
+
+	return url
 }
