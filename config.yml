@@ -1,0 +1,4 @@
+# Exchangeratesapi configs
+Exchangeratesapi:
+  root: "http://api.exchangeratesapi.io/v1/"
+  access_key: ""
