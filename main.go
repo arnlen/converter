@@ -12,7 +12,7 @@ import (
 	"github.com/tkanos/gonfig"
 
 	"environments"
-	"models"
+	era "exchangeratesapi"
 )
 
 var configuration environments.Configuration
@@ -40,7 +40,7 @@ func main() {
 	fmt.Println(usdAmount, "USD = ", eurConvertedAmount, "EUR")
 }
 
-func getLatestedUSDRate() models.ExchangeratesapiResponse {
+func getLatestedUSDRate() era.Rate {
 	endpoint := "latest"
 	urlParams := "base=EUR&symbols=USD"
 	url := buildUrlFor(endpoint, urlParams)
@@ -58,7 +58,7 @@ func getLatestedUSDRate() models.ExchangeratesapiResponse {
 	}
 
 	// Unmarshal standard keys
-	var exchangeratesapiResponseObject models.ExchangeratesapiResponse
+	var exchangeratesapiResponseObject era.Rate
 	json.Unmarshal(responseData, &exchangeratesapiResponseObject)
 
 	// Unmarshal nested rates
