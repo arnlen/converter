@@ -1,8 +1,8 @@
 package main
 
 import (
+	"exchangeratesapi"
 	"testing"
-	"models"
 
 	"github.com/jarcoal/httpmock"
 )
@@ -23,11 +23,11 @@ func TestGetLatestedUSDRate(t *testing.T) {
 	httpmock.RegisterResponder("GET", `=~^http:\/\/api.exchangeratesapi.io\/v1\/latest.*`,
 		httpmock.NewStringResponder(200, mockResponsePayload))
 
-	expected := models.ExchangeratesapiResponse {
-		Date:		"2021-04-21",
-		Base:		"EUR",
-		Symbol:	"USD",
-		Rate: 	2.50105,
+	expected := exchangeratesapi.Rate{
+		Date:   "2021-04-21",
+		Base:   "EUR",
+		Symbol: "USD",
+		Rate:   2.50105,
 	}
 
 	msg := getLatestedUSDRate()
