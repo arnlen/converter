@@ -1,16 +1,18 @@
 package main
 
 import (
-	"fmt"
-	"net/http"
-	"log"
-	"io/ioutil"
 	"encoding/json"
+	"flag"
+	"fmt"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"strconv"
 
 	"github.com/tkanos/gonfig"
 
-	"models"
 	"environments"
+	"models"
 )
 
 var configuration environments.Configuration
@@ -23,7 +25,19 @@ func init() {
 }
 
 func main() {
-	fmt.Println(getLatestedUSDRate())
+	usdPtr := flag.String("usd", "", "USD value to convert to EUR")
+	flag.Parse()
+
+	if *usdPtr == "" {
+		log.Fatal("Missing -usd parameter with the amount of USD to convert")
+	}
+
+	usdAmount, _ := strconv.ParseFloat(*usdPtr, 64)
+	latestUSDRate := getLatestedUSDRate()
+
+	eurConvertedAmount := convertUSDtoEUR(usdAmount, latestUSDRate.Rate)
+
+	fmt.Println(usdAmount, "USD = ", eurConvertedAmount, "EUR")
 }
 
 func getLatestedUSDRate() models.ExchangeratesapiResponse {
@@ -31,7 +45,7 @@ func getLatestedUSDRate() models.ExchangeratesapiResponse {
 	urlParams := "base=EUR&symbols=USD"
 	url := buildUrlFor(endpoint, urlParams)
 
-	fmt.Println("Calling:", url)
+	fmt.Println("📡 Calling Exchangerateapi to get latest rates...")
 
 	response, err := http.Get(url)
 	if err != nil {
@@ -42,8 +56,6 @@ func getLatestedUSDRate() models.ExchangeratesapiResponse {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	fmt.Println("Response:", string(responseData))
 
 	// Unmarshal standard keys
 	var exchangeratesapiResponseObject models.ExchangeratesapiResponse
@@ -61,6 +73,8 @@ func getLatestedUSDRate() models.ExchangeratesapiResponse {
 		exchangeratesapiResponseObject.Rate = value.(float64)
 	}
 
+	fmt.Println("✅ Latest rates received: 1 EUR =", exchangeratesapiResponseObject.Rate, "USD")
+
 	return exchangeratesapiResponseObject
 }
 
@@ -76,4 +90,8 @@ func buildUrlFor(endpoint string, urlParams string) string {
 	url := baseApiUrl + endpoint + integratedUrlParams
 
 	return url
+}
+
+func convertUSDtoEUR(usdAmount float64, rate float64) float64 {
+	return usdAmount * rate
 }
